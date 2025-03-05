@@ -165,7 +165,7 @@ pipeline {
                         ssh ${NCI_ALIAS} << EOF
 
                         echo "building GCC vanila version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-wompi.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
+                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
 
                         exit
                         
