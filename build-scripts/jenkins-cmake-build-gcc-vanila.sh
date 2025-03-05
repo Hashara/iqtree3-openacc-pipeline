@@ -16,8 +16,8 @@ export OMPI_CXX=g++
 export CC=gcc
 export CXX=g++
 
-export LDFLAGS="-L/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/lib"
-export CPPFLAGS="-I/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/include"
+export LDFLAGS="-L/apps/gcc/13.2.0/lib"
+export CPPFLAGS="-I/apps/gcc/13.2.0/include"
 
 
 ############
