@@ -11,10 +11,10 @@ module load openmpi/4.1.5 boost/1.84.0 eigen/3.3.7 gcc/13.2.0
 
 
 export OMPI_CC=gcc
-export OMPI_CXX=gcc++
+export OMPI_CXX=g++
 
 export CC=gcc
-export CXX=gcc++
+export CXX=g++
 
 export LDFLAGS="-L/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/lib"
 export CPPFLAGS="-I/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/include"
