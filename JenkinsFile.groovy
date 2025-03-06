@@ -14,6 +14,7 @@ pipeline {
         // bool for building NN
         booleanParam(defaultValue: true, description: 'Compile with NVHPC?', name: 'NVHPC')
         booleanParam(defaultValue: true, description: 'Compile with GCC?', name: 'GCC')
+        booleanParam(defaultValue: true, description: 'OpenACC intergration?', name: 'OPENACC')
 
 //        booleanParam(defaultValue: true, description: 'Run the GPU?', name: 'GPU')
 //        string(name: 'ONNX_NN_GPU', description: 'onnxruntime for NN-CUDA (use 1.12 version)', defaultValue: '/scratch/dx61/sa0557/iqtree2/onnxruntime-linux-x64-gpu-1.12.1')
@@ -40,6 +41,7 @@ pipeline {
          */
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-gcc-vanila"
+        BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
 
 
     }
@@ -71,47 +73,10 @@ pipeline {
                         
                         """
 
-                    // create env.sh file if NN or GPU is enabled
-//                    if ("${params.NN}" == "true" || "${params.GPU}" == "true") {
-//                        def envFileContent = """
-//export ONNX_NN=${params.ONNX_NN}
-//export ONNX_NN_GPU=${params.ONNX_NN_GPU}
-//"""
-//                        writeFile file: "env.sh", text: envFileContent
-//
-//                        sh "scp env.sh ${NCI_ALIAS}:${BUILD_SCRIPTS}"
-//                    }
 
                 }
             }
         }
-//        stage("Build: Build MPI") {
-//            steps {
-//                /*
-//
-//                    1. build-mpi --> build the mpi version of iqtree2
-//                    2. build-wompi --> build the non-mpi + openmp version of iqtree2
-//                    3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
-//                    4. build-nn-mpi --> build the mpi + NN version of iqtree2
-//                    4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
-//                    6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
-//                 */
-//                script {
-//                    sh """
-//                        ssh ${NCI_ALIAS} << EOF
-//
-//
-//                        echo "building mpi version"
-//                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-mpi.sh ${BUILD_MPI} ${IQTREE_DIR}
-//
-//
-//                        exit
-//
-//                        """
-//                }
-//            }
-//        }
-
         stage("Build: Build NVHPC Vanila") {
             steps {
                 /*
@@ -177,6 +142,62 @@ pipeline {
             }
         }
 
+        stage("Build: Build NVHPC OpenACC") {
+            steps {
+
+
+                script {
+
+                    echo "building NVHPC OpenACC version"
+
+                    if ("${params.NVHPC}" == "true" && "${params.OPENACC}" == "true") {
+                        sh """
+                        ssh ${NCI_ALIAS} << EOF
+
+                        echo "building NVHPC openACC version"
+                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-nvhpc-openAC.sh ${BUILD_NVHPC_OPENACC} ${IQTREE_DIR}
+
+                        exit
+                        
+                        """
+                    }
+                }
+            }
+        }
+
+        stage("Build: Build GCC Vanila") {
+            steps {
+                /*
+
+                    1. build-mpi --> build the mpi version of iqtree2
+                    2. build-wompi --> build the non-mpi + openmp version of iqtree2
+                    3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
+                    4. build-nn-mpi --> build the mpi + NN version of iqtree2
+                    4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
+                    6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
+                 */
+                script {
+
+                    echo "building GCC vanila version"
+
+
+                    if ("${params.GCC}" == "true") {
+
+                        sh """
+                        ssh ${NCI_ALIAS} << EOF
+
+                        echo "building GCC vanila version"
+                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
+
+                        exit
+                        
+                        """
+                    }
+
+
+                }
+            }
+        }
 
         stage('Verify') {
             steps {
