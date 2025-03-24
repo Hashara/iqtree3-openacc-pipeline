@@ -4,7 +4,7 @@
 #PBS -l mem=40GB
 #PBS -l jobfs=40GB
 #PBS -q normal
-#PBS -P a00
+#PBS -P dx61
 #PBS -l walltime=01:00:00
 #PBS -l storage=scratch/dx61
 #PBS -l wd
