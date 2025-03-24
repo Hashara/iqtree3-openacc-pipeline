@@ -155,7 +155,7 @@ pipeline {
                         ssh ${NCI_ALIAS} << EOF
 
                         echo "building NVHPC openACC version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-nvhpc-openAC.sh ${BUILD_NVHPC_OPENACC} ${IQTREE_DIR}
+                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh  ${BUILD_NVHPC_OPENACC} ${IQTREE_DIR} openacc
 
                         exit
                         

@@ -5,6 +5,16 @@
 work_dir=$1 # build dir
 code_dir=$2 # iqtree2 dir
 
+params=$3
+
+if [ "$params" == "openacc" ]; then
+    echo "building nvhpc-openacc"
+    cmake_params="-DUSE_OPENACC=ON"
+else
+    echo "building nvhpc-vanila"
+    cmake_params="-DUSE_OPENACC=OFF"
+fi
+
 
 ### pre steps #####
 module load openmpi/4.1.5 boost/1.84.0 nvhpc-compilers/24.7
@@ -27,7 +37,7 @@ echo "building nvhpc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF $code_dir
+cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen ${cmake_params} $code_dir
 make -j
 
 
