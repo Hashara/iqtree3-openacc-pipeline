@@ -45,6 +45,6 @@ echo "building gcc-vanila"
 mkdir -p "$work_dir"
 cd $work_dir
 cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
-make -j
+make -j |& tee -a $work_dir/build.log
 
 
