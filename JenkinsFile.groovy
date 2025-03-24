@@ -97,14 +97,15 @@ pipeline {
                     echo "building GCC vanila version"
 
 
+
                     if ("${params.GCC}" == "true") {
 
                         sh """
                         ssh ${NCI_ALIAS} << EOF
 
                         echo "building GCC vanila version"
-                        qsub ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
 
+                        qsub -vARG1=${BUILD_GCC_VANILA},ARG2=${IQTREE_DIR},ARG3="" ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh
                         exit
                         
                         """
