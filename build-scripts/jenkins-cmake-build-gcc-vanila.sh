@@ -5,6 +5,15 @@
 work_dir=$1 # build dir
 code_dir=$2 # iqtree2 dir
 
+params=$3
+
+if [ "$params" == "openacc" ]; then
+    echo "building gcc-openacc"
+    cmake_params="-DUSE_OPENACC=ON"
+else
+    echo "building gcc-vanila"
+    cmake_params="-DUSE_OPENACC=OFF"
+fi
 
 ### pre steps #####
 module load openmpi/4.1.5 boost/1.84.0 eigen/3.3.7 gcc/13.2.0
@@ -26,7 +35,7 @@ echo "building gcc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 -DUSE_CMAPLE=OFF $code_dir
+cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 ${cmake_params} $code_dir
 make -j
 
 

@@ -42,6 +42,7 @@ pipeline {
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-gcc-vanila"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
+        BUILD_GCC_OPENACC = "${BUILD_OUTPUT_DIR}/build-gcc-openacc"
 
 
     }
@@ -165,7 +166,7 @@ pipeline {
             }
         }
 
-        stage("Build: Build GCC Vanila") {
+        stage("Build: Build GCC OpenACC") {
             steps {
                 /*
 
@@ -178,16 +179,16 @@ pipeline {
                  */
                 script {
 
-                    echo "building GCC vanila version"
+                    echo "building GCC OpenACC version"
 
 
-                    if ("${params.GCC}" == "true") {
+                    if ("${params.GCC}" == "true"  && "${params.OPENACC}" == "true") {
 
                         sh """
                         ssh ${NCI_ALIAS} << EOF
 
                         echo "building GCC vanila version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
+                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_OPENACC} ${IQTREE_DIR} openacc
 
                         exit
                         
