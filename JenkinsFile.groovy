@@ -30,15 +30,6 @@ pipeline {
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
 
         // build directories
-        /*
-
-            1. build-mpi --> build the mpi version of iqtree2
-            2. build-wompi --> build the non-mpi + openmp version of iqtree2
-            3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
-            4. build-nn-mpi --> build the mpi + NN version of iqtree2
-            4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
-            6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
-         */
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-gcc-vanila"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
@@ -80,16 +71,6 @@ pipeline {
         }
         stage("Build: Build NVHPC Vanila") {
             steps {
-                /*
-
-                    1. build-mpi --> build the mpi version of iqtree2
-                    2. build-wompi --> build the non-mpi + openmp version of iqtree2
-                    3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
-                    4. build-nn-mpi --> build the mpi + NN version of iqtree2
-                    4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
-                    6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
-                 */
-
                 script {
 
                     echo "building NVHPC vanila version"
@@ -111,15 +92,6 @@ pipeline {
 
         stage("Build: Build GCC Vanila") {
             steps {
-                /*
-
-                    1. build-mpi --> build the mpi version of iqtree2
-                    2. build-wompi --> build the non-mpi + openmp version of iqtree2
-                    3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
-                    4. build-nn-mpi --> build the mpi + NN version of iqtree2
-                    4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
-                    6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
-                 */
                 script {
 
                     echo "building GCC vanila version"
@@ -168,15 +140,6 @@ pipeline {
 
         stage("Build: Build GCC OpenACC") {
             steps {
-                /*
-
-                    1. build-mpi --> build the mpi version of iqtree2
-                    2. build-wompi --> build the non-mpi + openmp version of iqtree2
-                    3. build-nn --> build the non-mpi + openmp + NN version of iqtree2
-                    4. build-nn-mpi --> build the mpi + NN version of iqtree2
-                    4. build-gpu-nn --> build the non-mpi (openmp) + openmp + NN + GPU version of iqtree2
-                    6. build-gpu-nn-mpi --> build the mpi + NN + GPU version of iqtree2
-                 */
                 script {
 
                     echo "building GCC OpenACC version"

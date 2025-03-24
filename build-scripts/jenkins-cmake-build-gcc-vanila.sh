@@ -1,5 +1,14 @@
 #!bin/bash
 
+#PBS -l ncpus=1
+#PBS -l mem=40GB
+#PBS -l jobfs=40GB
+#PBS -q normal
+#PBS -P a00
+#PBS -l walltime=01:00:00
+#PBS -l storage=scratch/dx61
+#PBS -l wd
+
 ###### handle arguments ######
 
 work_dir=$1 # build dir
@@ -35,7 +44,7 @@ echo "building gcc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 ${cmake_params} $code_dir
+cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
 make -j
 
 
