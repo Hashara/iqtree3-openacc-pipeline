@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 #PBS -l ncpus=1
 #PBS -l mem=40GB
