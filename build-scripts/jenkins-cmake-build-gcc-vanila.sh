@@ -11,10 +11,15 @@
 
 ###### handle arguments ######
 
-work_dir=$ARG1 # build dir
-code_dir=$ARG2 # iqtree2 dir
+#work_dir=$ARG1 # build dir
+#code_dir=$ARG2 # iqtree2 dir
+#
+#params=$ARG3
 
-params=$ARG3
+work_dir=$1 # build dir
+code_dir=$2 # iqtree2 dir
+
+params=$3
 
 if [ "$params" == "openacc" ]; then
     echo "building gcc-openacc"
