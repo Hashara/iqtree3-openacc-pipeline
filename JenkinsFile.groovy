@@ -7,9 +7,13 @@ pipeline {
     agent any
     parameters {
         string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to build')
+        booleanParam(defaultValue: true, description: 'Clone IQ-TREE?', name: 'CLONE_IQTREE')
         string(name: 'NCI_ALIAS', defaultValue: 'nci_gadi', description: 'ssh alias, if you do not have one, create one')
 
+
         string(name: 'WORKING_DIR', defaultValue: '/scratch/dx61/sa0557/iqtree2/ci-cd', description: 'Working directory')
+
+        booleanParam(defaultValue: true, description: 'Use QSUB?', name: 'QSUB')
 
         // bool for building NN
         booleanParam(defaultValue: true, description: 'Compile with NVHPC?', name: 'NVHPC')
@@ -28,6 +32,8 @@ pipeline {
         BUILD_SCRIPTS = "${WORKING_DIR}/build-scripts"
         IQTREE_DIR = "${WORKING_DIR}/${GIT_REPO}"
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
+        CLONE_IQTREE = "${params.CLONE_IQTREE}"
+        QSUB = "${params.QSUB}"
 
         // build directories
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
@@ -50,7 +56,12 @@ pipeline {
         stage('Setup environment') {
             steps {
                 script {
-                    sh """
+                    if ("$CLONE_IQTREE" == "true") {
+                        echo "Cloning IQ-TREE"
+                        // remove existing IQ-TREE
+                        cleanIQTree()
+
+                        sh """
                         ssh ${NCI_ALIAS} << EOF
                         mkdir -p ${WORKING_DIR}
                         cd  ${WORKING_DIR}
@@ -65,7 +76,10 @@ pipeline {
                         
                         """
 
-
+                    }
+                    else {
+                        echo "Using existing IQ-TREE"
+                    }
                 }
             }
         }
@@ -195,5 +209,10 @@ pipeline {
 
 def void cleanWs() {
     // ssh to NCI_ALIAS and remove the working directory
-    sh "ssh ${NCI_ALIAS} 'rm -rf ${IQTREE_DIR} ${BUILD_SCRIPTS}'"
+    sh "ssh ${NCI_ALIAS} 'rm -rf ${BUILD_SCRIPTS}'"
+}
+
+def void cleanIQTree() {
+    // ssh to NCI_ALIAS and remove the working directory
+    sh "ssh ${NCI_ALIAS} 'rm -rf ${IQTREE_DIR}'"
 }
