@@ -1,7 +1,3 @@
-//  a JenkinsFile to build iqtree
-// paramters
-//  1. git branch
-// 2. git url
 
 pipeline {
     agent any
@@ -20,8 +16,6 @@ pipeline {
         booleanParam(defaultValue: true, description: 'Compile with GCC?', name: 'GCC')
         booleanParam(defaultValue: true, description: 'OpenACC intergration?', name: 'OPENACC')
 
-//        booleanParam(defaultValue: true, description: 'Run the GPU?', name: 'GPU')
-//        string(name: 'ONNX_NN_GPU', description: 'onnxruntime for NN-CUDA (use 1.12 version)', defaultValue: '/scratch/dx61/sa0557/iqtree2/onnxruntime-linux-x64-gpu-1.12.1')
 
     }
     environment {
@@ -90,15 +84,7 @@ pipeline {
                     echo "building NVHPC vanila version"
 
                     if ("${params.NVHPC}" == "true") {
-                        sh """
-                        ssh ${NCI_ALIAS} << EOF
-
-                        echo "building NVHPC vanila version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-nvhpc-vanila.sh ${BUILD_NVHPC_VANILA} ${IQTREE_DIR}
-
-                        exit
-                        
-                        """
+                        runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_VANILA}", "", "${QSUB}")
                     }
                 }
             }
@@ -110,29 +96,8 @@ pipeline {
 
                     echo "building GCC vanila version"
 
-
-
                     if ("${params.GCC}" == "true") {
-
-                        sh """
-                        ssh ${NCI_ALIAS} << EOF
-
-                        echo "building GCC vanila version"
-
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_VANILA} ${IQTREE_DIR}
-                        exit
-                        
-                        """
-
-//                        sh """
-//                        ssh ${NCI_ALIAS} << EOF
-//
-//                        echo "building GCC vanila version"
-//
-//                        qsub -vARG1=${BUILD_GCC_VANILA},ARG2=${IQTREE_DIR},ARG3="" ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh
-//                        exit
-//
-//                        """
+                        runBuildScript("jenkins-cmake-build-gcc-vanila.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
                     }
 
 
@@ -149,15 +114,7 @@ pipeline {
                     echo "building NVHPC OpenACC version"
 
                     if ("${params.NVHPC}" == "true" && "${params.OPENACC}" == "true") {
-                        sh """
-                        ssh ${NCI_ALIAS} << EOF
-
-                        echo "building NVHPC openACC version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh  ${BUILD_NVHPC_OPENACC} ${IQTREE_DIR} openacc
-
-                        exit
-                        
-                        """
+                        runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_OPENACC}", "openacc", "${QSUB}")
                     }
                 }
             }
@@ -168,19 +125,8 @@ pipeline {
                 script {
 
                     echo "building GCC OpenACC version"
-
-
                     if ("${params.GCC}" == "true"  && "${params.OPENACC}" == "true") {
-
-                        sh """
-                        ssh ${NCI_ALIAS} << EOF
-
-                        echo "building GCC vanila version"
-                        sh ${BUILD_SCRIPTS}/jenkins-cmake-build-gcc-vanila.sh ${BUILD_GCC_OPENACC} ${IQTREE_DIR} openacc
-
-                        exit
-                        
-                        """
+                        runBuildScript("jenkins-cmake-build-gcc-vanila.sh", "${BUILD_GCC_OPENACC}", "openacc", "${QSUB}")
                     }
 
 
@@ -215,4 +161,30 @@ def void cleanWs() {
 def void cleanIQTree() {
     // ssh to NCI_ALIAS and remove the working directory
     sh "ssh ${NCI_ALIAS} 'rm -rf ${IQTREE_DIR}'"
+}
+
+
+def void runBuildScript(String script, String buildDir,  String openacc, String qsub) {
+
+    if (qsub == "true") {
+        sh """
+        ssh ${NCI_ALIAS} << EOF
+
+        echo "building ${script}:${qsub}"
+        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${openacc} ${BUILD_SCRIPTS}/qsub/${script}
+        exit
+
+        """
+    }
+    else {
+        sh """
+        ssh ${NCI_ALIAS} << EOF
+
+        echo "building ${script}:${qsub}"
+        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${openacc}
+
+        exit
+
+        """
+    }
 }
