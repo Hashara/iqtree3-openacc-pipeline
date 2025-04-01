@@ -14,6 +14,7 @@ pipeline {
         // bool for building NN
         booleanParam(defaultValue: true, description: 'Compile with NVHPC?', name: 'NVHPC')
         booleanParam(defaultValue: true, description: 'Compile with GCC?', name: 'GCC')
+        booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'OpenACC intergration?', name: 'OPENACC')
 
 
@@ -83,7 +84,7 @@ pipeline {
 
                     echo "building NVHPC vanila version"
 
-                    if ("${params.NVHPC}" == "true") {
+                    if ("${params.NVHPC}" == "true" && "${params.VANILA}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_VANILA}", "", "${QSUB}")
                     }
                 }
@@ -96,7 +97,7 @@ pipeline {
 
                     echo "building GCC vanila version"
 
-                    if ("${params.GCC}" == "true") {
+                    if ("${params.GCC}" == "true" && "${params.VANILA}" == "true") {
                         runBuildScript("jenkins-cmake-build-gcc-vanila.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
                     }
 
