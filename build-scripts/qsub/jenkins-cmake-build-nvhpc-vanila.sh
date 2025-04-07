@@ -15,6 +15,7 @@ work_dir=$ARG1 # build dir
 code_dir=$ARG2 # iqtree2 dir
 
 params=$ARG3
+custom_flags=$ARG4
 
 ###### handle arguments ######
 
@@ -53,7 +54,7 @@ echo "building nvhpc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
+cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} ${custom_flags} $code_dir
 make -j > $work_dir/build.log 2>&1
 
 

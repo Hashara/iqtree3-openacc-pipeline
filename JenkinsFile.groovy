@@ -8,6 +8,7 @@ pipeline {
 
 
         string(name: 'WORKING_DIR', defaultValue: '/scratch/dx61/sa0557/iqtree2/ci-cd', description: 'Working directory')
+        string(name: 'CUSTOM_FLAGS', defaultValue: '', description: 'Custom flags to pass to IQ-TREE')
 
         booleanParam(defaultValue: true, description: 'Use QSUB?', name: 'QSUB')
 
@@ -29,6 +30,7 @@ pipeline {
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
         CLONE_IQTREE = "${params.CLONE_IQTREE}"
         QSUB = "${params.QSUB}"
+        CUSTOM_FLAGS = "${params.CUSTOM_FLAGS}"
 
         // build directories
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
@@ -172,7 +174,7 @@ def void runBuildScript(String script, String buildDir,  String openacc, String 
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${openacc} ${BUILD_SCRIPTS}/qsub/${script}
+        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${openacc},ARG4=${CUSTOM_FLAGS} ${BUILD_SCRIPTS}/qsub/${script}
         exit
 
         """
@@ -182,7 +184,7 @@ def void runBuildScript(String script, String buildDir,  String openacc, String 
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${openacc}
+        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${openacc} ${CUSTOM_FLAGS}
 
         exit
 

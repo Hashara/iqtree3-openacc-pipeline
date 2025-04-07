@@ -5,6 +5,7 @@ work_dir=$1 # build dir
 code_dir=$2 # iqtree2 dir
 
 params=$3
+custom_flags=$4
 
 if [ "$params" == "openacc" ]; then
     echo "building gcc-openacc"
@@ -34,7 +35,7 @@ echo "building gcc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
+cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 -DUSE_CMAPLE=OFF ${cmake_params} ${custom_flags} $code_dir
 make -j |& tee -a $work_dir/build.log
 
 
