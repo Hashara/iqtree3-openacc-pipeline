@@ -36,7 +36,17 @@ echo "building nvhpc-cuda"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
+#cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
+cmake -S "$code_dir" -B "$work_dir" \
+  -DCMAKE_C_COMPILER=nvc \
+  -DCMAKE_CXX_COMPILER=nvc++ \
+  -DCMAKE_CUDA_COMPILER="$(command -v nvcc)" \
+  -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+  -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
+  -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
+  -DUSE_CMAPLE=OFF \
+  -DUSE_CUDA=ON
+
 make -j > $work_dir/build.log 2>&1
 
 
