@@ -24,7 +24,7 @@ pipeline {
         IQTREE_DIR = "${WORKING_DIR}/${GIT_REPO}"
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
         CLONE_IQTREE = "${params.CLONE_IQTREE}"
-        QSUB = true
+        QSUB = "true"
 
         // build directories
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
