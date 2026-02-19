@@ -134,8 +134,9 @@ def void cleanIQTree() {
 
 
 def void runBuildScript(String script, String buildDir,  String CUDA, String qsub) {
-
+    echo "running building ..."
     if (qsub == "true") {
+        echo "running with qsub ..."
         sh """
         ssh ${NCI_ALIAS} << EOF
 
