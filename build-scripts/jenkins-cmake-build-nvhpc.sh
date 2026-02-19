@@ -1,20 +1,10 @@
 #!/bin/bash
 
-#PBS -l ncpus=1
-#PBS -l mem=4GB
-#PBS -l jobfs=10GB
-#PBS -q normal
-#PBS -P dx61
-#PBS -l walltime=00:00:00
-#PBS -l storage=scratch/dx61
-#PBS -l wd
+work_dir=$1 # build dir
+code_dir=$2 # iqtree2 dir
 
-###### handle arguments ######
+params=$3
 
-work_dir=$ARG1 # build dir
-code_dir=$ARG2 # iqtree2 dir
-
-params=$ARG3
 
 ###### handle arguments ######
 
