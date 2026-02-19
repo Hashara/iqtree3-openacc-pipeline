@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#PBS -l ncpus=1
-#PBS -l mem=4GB
-#PBS -l jobfs=10GB
+#PBS -l ncpus=2
+#PBS -l mem=8GB
+#PBS -l jobfs=20GB
 #PBS -q normal
 #PBS -P dx61
 #PBS -l walltime=01:00:00
