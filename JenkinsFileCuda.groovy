@@ -94,10 +94,10 @@ pipeline {
 
                 script {
 
-                    echo "building NVHPC OpenACC version"
+                    echo "building NVHPC CUDA version"
 
                     if ("${params.NVHPC}" == "true" && "${params.CUDA}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "openacc", "${QSUB}")
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "CUDA", "${QSUB}")
                     }
                 }
             }

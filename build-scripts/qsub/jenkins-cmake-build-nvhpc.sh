@@ -28,7 +28,7 @@ if [ "$params" == "CUDA" ]; then
     cmake_params="-DUSE_CUDA=ON"
 else
     echo "building nvhpc-vanila"
-    cmake_params="-DUSE_OPENACC=OFF"
+    cmake_params="-DUSE_CUDA=OFF"
 fi
 
 
