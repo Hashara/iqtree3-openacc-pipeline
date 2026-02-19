@@ -45,7 +45,7 @@ cmake -S "$code_dir" -B "$work_dir" \
   -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
   -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
   -DUSE_CMAPLE=OFF \
-  -DUSE_CUDA=ON
+  -DUSE_CUDA=ON > $work_dir/compiler.log 2>&1
 
 make -j > $work_dir/build.log 2>&1
 
