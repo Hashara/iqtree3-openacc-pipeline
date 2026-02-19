@@ -9,7 +9,9 @@ pipeline {
 
         string(name: 'WORKING_DIR', defaultValue: '/scratch/dx61/sa0557/iqtree2/ci-cd', description: 'Working directory')
 
-        // bool for building NN
+        booleanParam(defaultValue: true, description: 'QSUB?', name: 'QSUB')
+
+
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
 
@@ -24,7 +26,7 @@ pipeline {
         IQTREE_DIR = "${WORKING_DIR}/${GIT_REPO}"
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
         CLONE_IQTREE = "${params.CLONE_IQTREE}"
-        QSUB = "false"
+        QSUB = "${params.QSUB}"
 
         // build directories
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
