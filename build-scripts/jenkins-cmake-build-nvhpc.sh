@@ -26,6 +26,11 @@ export CC=nvc
 export CXX=nvc++
 
 export NVHPC_CUDA_HOME=/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/cuda
+export PATH="$NVHPC_CUDA_HOME/bin:$PATH"
+
+export LIBRARY_PATH="$NVHPC_CUDA_HOME/lib64:${LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="$NVHPC_CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+
 export CUDACXX=nvcc
 
 export LDFLAGS="-L/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/lib"
@@ -39,7 +44,12 @@ echo "building nvhpc-vanila"
 mkdir -p "$work_dir"
 cd $work_dir
 cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" \
-      -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
+      -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
+      -DCMAKE_C_COMPILER=nvc \
+      -DCMAKE_CXX_COMPILER=nvc++ \
+      -DCMAKE_CUDA_COMPILER="$CUDACXX" \
+      -DCUDAToolkit_ROOT="$NVHPC_CUDA_HOME" \
+      -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
 make -j > $work_dir/build.log 2>&1
 
 
