@@ -28,12 +28,6 @@ export CXX=nvc++
 export NVHPC_CUDA_HOME=/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/cuda
 export CUDACXX=nvcc
 
-if [ "$params" = "CUDA" ] && [ ! -x "$CUDACXX" ]; then
-  echo "ERROR: CUDA compiler not found at $CUDACXX"
-  exit 1
-fi
-
-
 export LDFLAGS="-L/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/lib"
 export CPPFLAGS="-I/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/include"
 
