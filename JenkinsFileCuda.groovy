@@ -60,7 +60,7 @@ pipeline {
                         mkdir -p ${BUILD_OUTPUT_DIR}
                         mkdir -p ${BUILD_SCRIPTS}
                         cd ${BUILD_OUTPUT_DIR}
-                        rm -rf *
+                       
                         exit
                         
                         """
@@ -117,7 +117,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace'
-            cleanWs()
+           // cleanWs()
         }
     }
 }
