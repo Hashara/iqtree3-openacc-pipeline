@@ -79,7 +79,7 @@ pipeline {
 
                     echo "building GCC vanila version"
 
-                    if ("${params.GCC}" == "true" && "${params.VANILA}" == "true") {
+                    if ("${params.VANILA}" == "true") {
                         runBuildScript("jenkins-cmake-build-gcc.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
                     }
 
@@ -96,7 +96,7 @@ pipeline {
 
                     echo "building NVHPC CUDA version"
 
-                    if ("${params.NVHPC}" == "true" && "${params.CUDA}" == "true") {
+                    if ("${params.CUDA}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "CUDA", "${QSUB}")
                     }
                 }
