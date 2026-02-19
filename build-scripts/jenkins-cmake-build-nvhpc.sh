@@ -31,7 +31,16 @@ export OMPI_CXX=nvc++
 
 export CC=nvc
 export CXX=nvc++
-export CUDACXX=nvcc
+
+export NVHPC_CUDA_HOME=/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/cuda
+export CUDACXX="$NVHPC_CUDA_HOME/bin/nvcc"
+export PATH="$NVHPC_CUDA_HOME/bin:$PATH"
+
+if [ "$params" = "CUDA" ] && [ ! -x "$CUDACXX" ]; then
+  echo "ERROR: CUDA compiler not found at $CUDACXX"
+  exit 1
+fi
+
 
 export LDFLAGS="-L/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/lib"
 export CPPFLAGS="-I/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/include"
