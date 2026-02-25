@@ -69,7 +69,7 @@ cmake -S "$code_dir" -B "$work_dir" \
   -DUSE_CMAPLE=OFF \
   $cmake_params > $work_dir/compiler.log 2>&1
 elif [ "$params" == "OPENACC" ]; then
-    cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} $code_dir > $work_dir/compiler.log 2>&1
+    cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF ${cmake_params} $code_dir > $work_dir/compiler.log 2>&1
 fi
 make -j > $work_dir/build.log 2>&1
 
