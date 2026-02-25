@@ -116,7 +116,7 @@ pipeline {
                     echo "building NVHPC OpenACC version"
 
                     if ("${params.OPENACC}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "OPENACC", "${QSUB}")
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}")
                     }
                 }
             }
