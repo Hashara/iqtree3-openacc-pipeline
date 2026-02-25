@@ -14,6 +14,7 @@ pipeline {
 
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
+        booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
 
 
     }
@@ -31,6 +32,7 @@ pipeline {
         // build directories
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
         BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
+        BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
 
 
     }
@@ -100,6 +102,21 @@ pipeline {
 
                     if ("${params.CUDA}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "CUDA", "${QSUB}")
+                    }
+                }
+            }
+
+        }
+        stage("Build: Build NVHPC CUDA") {
+            steps {
+
+
+                script {
+
+                    echo "building NVHPC CUDA version"
+
+                    if ("${params.OPENACC}" == "true") {
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "OPENACC", "${QSUB}")
                     }
                 }
             }

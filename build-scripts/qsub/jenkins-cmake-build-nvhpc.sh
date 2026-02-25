@@ -26,6 +26,9 @@ params=$ARG3
 if [ "$params" == "CUDA" ]; then
     echo "building nvhpc-cuda"
     cmake_params="-DUSE_CUDA=ON"
+elif [ "$params" == "OPENACC" ]; then
+    echo "building nvhpc-OpenACC"
+    cmake_params="-DUSE_OPENACC=ON"
 else
     echo "building nvhpc-vanila"
     cmake_params="-DUSE_CUDA=OFF"
@@ -55,6 +58,7 @@ echo "building nvhpc-cuda"
 mkdir -p "$work_dir"
 cd $work_dir
 #cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
+if [ "$params" == "CUDA" ]; then
 cmake -S "$code_dir" -B "$work_dir" \
   -DCMAKE_C_COMPILER=nvc \
   -DCMAKE_CXX_COMPILER=nvc++ \
@@ -63,8 +67,10 @@ cmake -S "$code_dir" -B "$work_dir" \
   -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
   -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
   -DUSE_CMAPLE=OFF \
-  -DUSE_CUDA=ON > $work_dir/compiler.log 2>&1
-
+  $cmake_params > $work_dir/compiler.log 2>&1
+elif [ "$params" == "OPENACC" ]; then
+    cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} $code_dir > $work_dir/compiler.log 2>&1
+fi
 make -j > $work_dir/build.log 2>&1
 
 
