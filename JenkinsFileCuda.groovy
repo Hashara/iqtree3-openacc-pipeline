@@ -107,13 +107,13 @@ pipeline {
             }
 
         }
-        stage("Build: Build NVHPC CUDA") {
+        stage("Build: Build NVHPC OpenACC") {
             steps {
 
 
                 script {
 
-                    echo "building NVHPC CUDA version"
+                    echo "building NVHPC OpenACC version"
 
                     if ("${params.OPENACC}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "OPENACC", "${QSUB}")
