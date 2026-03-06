@@ -4,6 +4,7 @@ work_dir=$1 # build dir
 code_dir=$2 # iqtree2 dir
 
 params=$3
+gpu_arch=$4 # GPU architecture (e.g. cc70, cc80, cc90). Empty = multi-arch default
 
 
 ###### handle arguments ######
@@ -14,6 +15,12 @@ if [ "$params" == "CUDA" ]; then
 elif [ "$params" == "OPENACC" ]; then
     echo "building nvhpc-OpenACC"
     cmake_params="-DUSE_OPENACC=ON"
+    if [ -n "$gpu_arch" ]; then
+        cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
+        echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
+    else
+        echo "GPU_ARCH: default (cc70,cc80,cc90)"
+    fi
 else
     echo "building nvhpc-vanila"
     cmake_params="-DUSE_CUDA=OFF"

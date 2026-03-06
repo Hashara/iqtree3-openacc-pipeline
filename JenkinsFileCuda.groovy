@@ -15,6 +15,7 @@ pipeline {
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
         booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
+        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default')
 
 
     }
@@ -28,6 +29,7 @@ pipeline {
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
         CLONE_IQTREE = "${params.CLONE_IQTREE}"
         QSUB = "${params.QSUB}"
+        GPU_ARCH = "${params.GPU_ARCH}"
 
         // build directories
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
@@ -116,7 +118,7 @@ pipeline {
                     echo "building NVHPC OpenACC version"
 
                     if ("${params.OPENACC}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}")
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}", "${GPU_ARCH}")
                     }
                 }
             }
@@ -152,7 +154,7 @@ def void cleanIQTree() {
 }
 
 
-def void runBuildScript(String script, String buildDir,  String CUDA, String qsub) {
+def void runBuildScript(String script, String buildDir,  String CUDA, String qsub, String gpuArch = '') {
     echo "running building ..."
     if (qsub == "true") {
         echo "running with qsub ..."
@@ -160,7 +162,7 @@ def void runBuildScript(String script, String buildDir,  String CUDA, String qsu
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${CUDA} ${BUILD_SCRIPTS}/qsub/${script}
+        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${CUDA},ARG4=${gpuArch} ${BUILD_SCRIPTS}/qsub/${script}
         exit
 
         """
@@ -170,7 +172,7 @@ def void runBuildScript(String script, String buildDir,  String CUDA, String qsu
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${CUDA}
+        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${CUDA} ${gpuArch}
 
         exit
 
