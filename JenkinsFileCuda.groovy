@@ -15,6 +15,7 @@ pipeline {
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
         booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
+        booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
         string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default')
 
 
@@ -35,6 +36,7 @@ pipeline {
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
         BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
+        BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
 
 
     }
@@ -119,6 +121,19 @@ pipeline {
 
                     if ("${params.OPENACC}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}", "${GPU_ARCH}")
+                    }
+                }
+            }
+        }
+
+        stage("Build: Build NVHPC OpenACC Profiling") {
+            steps {
+                script {
+
+                    echo "building NVHPC OpenACC with profiling instrumentation"
+
+                    if ("${params.OPENACC_PROFILE}" == "true") {
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_PROF_OPENACC}", "OPENACC_PROFILE", "${QSUB}", "${GPU_ARCH}")
                     }
                 }
             }
