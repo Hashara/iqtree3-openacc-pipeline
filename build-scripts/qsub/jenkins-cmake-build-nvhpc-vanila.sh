@@ -23,7 +23,10 @@ params=$ARG3
 #
 #params=$3
 
-if [ "$params" == "openacc" ]; then
+if [ "$params" == "openacc-profile" ]; then
+    echo "building nvhpc-openacc with profiling"
+    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON"
+elif [ "$params" == "openacc" ]; then
     echo "building nvhpc-openacc"
     cmake_params="-DUSE_OPENACC=ON"
 else

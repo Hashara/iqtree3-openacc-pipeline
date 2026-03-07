@@ -9,14 +9,14 @@ pipeline {
 
         string(name: 'WORKING_DIR', defaultValue: '/scratch/dx61/sa0557/iqtree2/ci-cd', description: 'Working directory')
 
-        booleanParam(defaultValue: true, description: 'Use QSUB?', name: 'QSUB')
+        booleanParam(defaultValue: true, description: 'QSUB?', name: 'QSUB')
 
-        // bool for building NN
-        booleanParam(defaultValue: true, description: 'Compile with NVHPC?', name: 'NVHPC')
-        booleanParam(defaultValue: true, description: 'Compile with GCC?', name: 'GCC')
+
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
-        booleanParam(defaultValue: true, description: 'OpenACC intergration?', name: 'OPENACC')
+        booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
+        booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
+        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default')
 
 
     }
@@ -30,12 +30,12 @@ pipeline {
         BUILD_OUTPUT_DIR = "${WORKING_DIR}/builds"
         CLONE_IQTREE = "${params.CLONE_IQTREE}"
         QSUB = "${params.QSUB}"
+        GPU_ARCH = "${params.GPU_ARCH}"
 
         // build directories
-        BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
-        BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-gcc-vanila"
+        BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
+        BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
-        BUILD_GCC_OPENACC = "${BUILD_OUTPUT_DIR}/build-gcc-openacc"
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
 
 
@@ -68,7 +68,7 @@ pipeline {
                         mkdir -p ${BUILD_OUTPUT_DIR}
                         mkdir -p ${BUILD_SCRIPTS}
                         cd ${BUILD_OUTPUT_DIR}
-                        rm -rf *
+                       
                         exit
                         
                         """
@@ -80,27 +80,15 @@ pipeline {
                 }
             }
         }
-        stage("Build: Build NVHPC Vanila") {
-            steps {
-                script {
 
-                    echo "building NVHPC vanila version"
-
-                    if ("${params.NVHPC}" == "true" && "${params.VANILA}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_VANILA}", "", "${QSUB}")
-                    }
-                }
-            }
-        }
-
-        stage("Build: Build GCC Vanila") {
+        stage("Build: Build Vanila") {
             steps {
                 script {
 
                     echo "building GCC vanila version"
 
-                    if ("${params.GCC}" == "true" && "${params.VANILA}" == "true") {
-                        runBuildScript("jenkins-cmake-build-gcc-vanila.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
+                    if ("${params.VANILA}" == "true") {
+                        runBuildScript("jenkins-cmake-build-gcc.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
                     }
 
 
@@ -108,6 +96,21 @@ pipeline {
             }
         }
 
+        stage("Build: Build NVHPC CUDA") {
+            steps {
+
+
+                script {
+
+                    echo "building NVHPC CUDA version"
+
+                    if ("${params.CUDA}" == "true") {
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "CUDA", "${QSUB}")
+                    }
+                }
+            }
+
+        }
         stage("Build: Build NVHPC OpenACC") {
             steps {
 
@@ -116,23 +119,9 @@ pipeline {
 
                     echo "building NVHPC OpenACC version"
 
-                    if ("${params.NVHPC}" == "true" && "${params.OPENACC}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_OPENACC}", "openacc", "${QSUB}")
+                    if ("${params.OPENACC}" == "true") {
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}", "${GPU_ARCH}")
                     }
-                }
-            }
-        }
-
-        stage("Build: Build GCC OpenACC") {
-            steps {
-                script {
-
-                    echo "building GCC OpenACC version"
-                    if ("${params.GCC}" == "true"  && "${params.OPENACC}" == "true") {
-                        runBuildScript("jenkins-cmake-build-gcc-vanila.sh", "${BUILD_GCC_OPENACC}", "openacc", "${QSUB}")
-                    }
-
-
                 }
             }
         }
@@ -143,8 +132,8 @@ pipeline {
 
                     echo "building NVHPC OpenACC with profiling instrumentation"
 
-                    if ("${params.NVHPC}" == "true" && "${params.OPENACC_PROFILE}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc-vanila.sh", "${BUILD_NVHPC_PROF_OPENACC}", "openacc-profile", "${QSUB}")
+                    if ("${params.OPENACC_PROFILE}" == "true") {
+                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_PROF_OPENACC}", "OPENACC_PROFILE", "${QSUB}", "${GPU_ARCH}")
                     }
                 }
             }
@@ -164,7 +153,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up workspace'
-            cleanWs()
+           // cleanWs()
         }
     }
 }
@@ -180,14 +169,15 @@ def void cleanIQTree() {
 }
 
 
-def void runBuildScript(String script, String buildDir,  String openacc, String qsub) {
-
+def void runBuildScript(String script, String buildDir,  String CUDA, String qsub, String gpuArch = '') {
+    echo "running building ..."
     if (qsub == "true") {
+        echo "running with qsub ..."
         sh """
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${openacc} ${BUILD_SCRIPTS}/qsub/${script}
+        qsub -vARG1=${buildDir},ARG2=${IQTREE_DIR},ARG3=${CUDA},ARG4=${gpuArch} ${BUILD_SCRIPTS}/qsub/${script}
         exit
 
         """
@@ -197,7 +187,7 @@ def void runBuildScript(String script, String buildDir,  String openacc, String 
         ssh ${NCI_ALIAS} << EOF
 
         echo "building ${script}:${qsub}"
-        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${openacc}
+        sh ${BUILD_SCRIPTS}/${script} ${buildDir} ${IQTREE_DIR} ${CUDA} ${gpuArch}
 
         exit
 
