@@ -21,7 +21,7 @@ pipeline {
 
     }
     environment {
-        IQTREE_GIT_URL = "https://github.com/hashara/iqtree3.git"
+        IQTREE_GIT_URL = "git@github.com:hashara/iqtree3.git"
         NCI_ALIAS = "${params.NCI_ALIAS}"
         WORKING_DIR = "${params.WORKING_DIR}"
         GIT_REPO = "iqtree3"
