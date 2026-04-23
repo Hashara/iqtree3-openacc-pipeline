@@ -36,6 +36,24 @@ elif [ "$params" == "OPENACC_PROFILE" ]; then
     else
         echo "GPU_ARCH: default (cc70,cc80,cc90)"
     fi
+elif [ "$params" == "OPENACC_DEBUG" ]; then
+    echo "building nvhpc-OpenACC with debug build"
+    cmake_params="-DUSE_OPENACC=ON -DCMAKE_BUILD_TYPE=Debug"
+    if [ -n "$gpu_arch" ]; then
+        cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
+        echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
+    else
+        echo "GPU_ARCH: default (cc70,cc80,cc90)"
+    fi
+elif [ "$params" == "OPENACC_DEBUG_PROFILE" ]; then
+    echo "building nvhpc-OpenACC with debug build and profiling"
+    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DCMAKE_BUILD_TYPE=Debug"
+    if [ -n "$gpu_arch" ]; then
+        cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
+        echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
+    else
+        echo "GPU_ARCH: default (cc70,cc80,cc90)"
+    fi
 elif [ "$params" == "OPENACC" ]; then
     echo "building nvhpc-OpenACC"
     cmake_params="-DUSE_OPENACC=ON"
@@ -84,7 +102,7 @@ cmake -S "$code_dir" -B "$work_dir" \
   -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
   -DUSE_CMAPLE=OFF \
   $cmake_params > $work_dir/compiler.log 2>&1
-elif [ "$params" == "OPENACC" ] || [ "$params" == "OPENACC_PROFILE" ]; then
+elif [ "$params" == "OPENACC" ] || [ "$params" == "OPENACC_PROFILE" ] || [ "$params" == "OPENACC_DEBUG" ] || [ "$params" == "OPENACC_DEBUG_PROFILE" ]; then
     cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF ${cmake_params} $code_dir > $work_dir/compiler.log 2>&1
 fi
 make -j > $work_dir/build.log 2>&1
