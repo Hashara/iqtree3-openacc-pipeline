@@ -18,7 +18,12 @@ pipeline {
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
         booleanParam(defaultValue: false, description: 'OpenACC with debug build?', name: 'OPENACC_DEBUG')
         booleanParam(defaultValue: false, description: 'OpenACC with debug build + profiling instrumentation?', name: 'OPENACC_DEBUG_PROFILE')
-        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default')
+        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default. Ignored when any of V100/A100/H200 below is selected.')
+
+        // Per-arch single-target builds. When any of these is true, each enabled arch produces a separate build dir suffixed with -v100/-a100/-h200 (cc70/cc80/cc90 respectively). H200 shares Hopper cc90 with H100.
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for V100 (cc70)?', name: 'V100')
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for A100 (cc80)?', name: 'A100')
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for H200 (cc90)?', name: 'H200')
 
 
     }
@@ -124,7 +129,7 @@ pipeline {
                     echo "building NVHPC OpenACC version"
 
                     if ("${params.OPENACC}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_OPENACC}", "OPENACC", "${QSUB}", "${GPU_ARCH}")
+                        buildOpenACCVariants("${BUILD_NVHPC_OPENACC}", "OPENACC")
                     }
                 }
             }
@@ -137,7 +142,7 @@ pipeline {
                     echo "building NVHPC OpenACC with profiling instrumentation"
 
                     if ("${params.OPENACC_PROFILE}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_PROF_OPENACC}", "OPENACC_PROFILE", "${QSUB}", "${GPU_ARCH}")
+                        buildOpenACCVariants("${BUILD_NVHPC_PROF_OPENACC}", "OPENACC_PROFILE")
                     }
                 }
             }
@@ -150,7 +155,7 @@ pipeline {
                     echo "building NVHPC OpenACC with debug build"
 
                     if ("${params.OPENACC_DEBUG}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_DEBUG_OPENACC}", "OPENACC_DEBUG", "${QSUB}", "${GPU_ARCH}")
+                        buildOpenACCVariants("${BUILD_NVHPC_DEBUG_OPENACC}", "OPENACC_DEBUG")
                     }
                 }
             }
@@ -163,7 +168,7 @@ pipeline {
                     echo "building NVHPC OpenACC with debug build and profiling instrumentation"
 
                     if ("${params.OPENACC_DEBUG_PROFILE}" == "true") {
-                        runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_DEBUG_PROF_OPENACC}", "OPENACC_DEBUG_PROFILE", "${QSUB}", "${GPU_ARCH}")
+                        buildOpenACCVariants("${BUILD_NVHPC_DEBUG_PROF_OPENACC}", "OPENACC_DEBUG_PROFILE")
                     }
                 }
             }
@@ -222,5 +227,35 @@ def void runBuildScript(String script, String buildDir,  String CUDA, String qsu
         exit
 
         """
+    }
+}
+
+// Dispatches one or more single-arch OpenACC builds for the given variant.
+// When any of V100/A100/H200 is true, each enabled arch is built into a
+// suffixed dir (-v100/-a100/-h200) with the matching qsub script:
+//   V100  -> jenkins-cmake-build-nvhpc.sh       (-q normal,    cc70)
+//   A100  -> jenkins-cmake-build-nvhpc-a100.sh  (-q dgxa100,   cc80)
+//   H200  -> jenkins-cmake-build-nvhpc-h200.sh  (-q gpuhopper, cc90)
+// dgxa100 and gpuhopper queues require ngpus>=1, so the per-arch scripts
+// embed the appropriate PBS resource directives.
+// When none of V100/A100/H200 is set, falls back to the original single-build
+// behavior on the normal queue using GPU_ARCH (empty = multi-arch default).
+def void buildOpenACCVariants(String baseDir, String variant) {
+    boolean anyArch = ("${params.V100}" == "true") || ("${params.A100}" == "true") || ("${params.H200}" == "true")
+    if (anyArch) {
+        if ("${params.V100}" == "true") {
+            echo "building ${variant} for V100 (cc70) -> ${baseDir}-v100"
+            runBuildScript("jenkins-cmake-build-nvhpc.sh", "${baseDir}-v100", variant, "${QSUB}", "cc70")
+        }
+        if ("${params.A100}" == "true") {
+            echo "building ${variant} for A100 (cc80) on dgxa100 queue -> ${baseDir}-a100"
+            runBuildScript("jenkins-cmake-build-nvhpc-a100.sh", "${baseDir}-a100", variant, "${QSUB}", "cc80")
+        }
+        if ("${params.H200}" == "true") {
+            echo "building ${variant} for H200 (cc90) on gpuhopper queue -> ${baseDir}-h200"
+            runBuildScript("jenkins-cmake-build-nvhpc-h200.sh", "${baseDir}-h200", variant, "${QSUB}", "cc90")
+        }
+    } else {
+        runBuildScript("jenkins-cmake-build-nvhpc.sh", baseDir, variant, "${QSUB}", "${GPU_ARCH}")
     }
 }
