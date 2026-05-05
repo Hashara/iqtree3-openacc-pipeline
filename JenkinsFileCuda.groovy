@@ -12,7 +12,8 @@ pipeline {
         booleanParam(defaultValue: true, description: 'QSUB?', name: 'QSUB')
 
 
-        booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
+        booleanParam(defaultValue: true, description: 'Vanila (GCC)?', name: 'VANILA')
+        booleanParam(defaultValue: false, description: 'Vanila (Clang)?', name: 'CLANG_VANILA')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
         booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
@@ -41,6 +42,7 @@ pipeline {
 
         // build directories
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
+        BUILD_CLANG_VANILA = "${BUILD_OUTPUT_DIR}/build-clang-vanila"
         BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
@@ -100,6 +102,20 @@ pipeline {
                         runBuildScript("jenkins-cmake-build-gcc.sh", "${BUILD_GCC_VANILA}", "", "${QSUB}")
                     }
 
+
+                }
+            }
+        }
+
+        stage("Build: Build Clang Vanila") {
+            steps {
+                script {
+
+                    echo "building Clang vanila version"
+
+                    if ("${params.CLANG_VANILA}" == "true") {
+                        runBuildScript("jenkins-cmake-build-clang-vanila.sh", "${BUILD_CLANG_VANILA}", "", "${QSUB}")
+                    }
 
                 }
             }
