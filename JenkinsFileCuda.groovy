@@ -19,12 +19,16 @@ pipeline {
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
         booleanParam(defaultValue: false, description: 'OpenACC with debug build?', name: 'OPENACC_DEBUG')
         booleanParam(defaultValue: false, description: 'OpenACC with debug build + profiling instrumentation?', name: 'OPENACC_DEBUG_PROFILE')
-        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture for OpenACC (e.g. cc70, cc80, cc90). Empty = multi-arch default. Ignored when any of V100/A100/H200 below is selected.')
+        booleanParam(defaultValue: false, description: 'OpenMP GPU implementation?', name: 'OPENMP_GPU')
+        booleanParam(defaultValue: false, description: 'OpenMP GPU with profiling instrumentation?', name: 'OPENMP_GPU_PROFILE')
+        booleanParam(defaultValue: false, description: 'OpenMP GPU with debug build?', name: 'OPENMP_GPU_DEBUG')
+        booleanParam(defaultValue: false, description: 'OpenMP GPU with debug build + profiling instrumentation?', name: 'OPENMP_GPU_DEBUG_PROFILE')
+        string(name: 'GPU_ARCH', defaultValue: '', description: 'GPU architecture (e.g. cc70, cc80, cc90). Empty = multi-arch default. Ignored when any of V100/A100/H200 below is selected.')
 
         // Per-arch single-target builds. When any of these is true, each enabled arch produces a separate build dir suffixed with -v100/-a100/-h200 (cc70/cc80/cc90 respectively). H200 shares Hopper cc90 with H100.
-        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for V100 (cc70)?', name: 'V100')
-        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for A100 (cc80)?', name: 'A100')
-        booleanParam(defaultValue: false, description: 'Build dedicated single-arch OpenACC binary for H200 (cc90)?', name: 'H200')
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch binary for V100 (cc70)?', name: 'V100')
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch binary for A100 (cc80)?', name: 'A100')
+        booleanParam(defaultValue: false, description: 'Build dedicated single-arch binary for H200 (cc90)?', name: 'H200')
 
 
     }
@@ -48,6 +52,10 @@ pipeline {
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
         BUILD_NVHPC_DEBUG_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-debug-openacc"
         BUILD_NVHPC_DEBUG_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-debug-prof-openacc"
+        BUILD_NVHPC_OPENMP_GPU = "${BUILD_OUTPUT_DIR}/build-nvhpc-openmp-gpu"
+        BUILD_NVHPC_PROF_OPENMP_GPU = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openmp-gpu"
+        BUILD_NVHPC_DEBUG_OPENMP_GPU = "${BUILD_OUTPUT_DIR}/build-nvhpc-debug-openmp-gpu"
+        BUILD_NVHPC_DEBUG_PROF_OPENMP_GPU = "${BUILD_OUTPUT_DIR}/build-nvhpc-debug-prof-openmp-gpu"
 
 
     }
@@ -190,6 +198,58 @@ pipeline {
             }
         }
 
+        stage("Build: Build NVHPC OpenMP GPU") {
+            steps {
+                script {
+
+                    echo "building NVHPC OpenMP GPU version"
+
+                    if ("${params.OPENMP_GPU}" == "true") {
+                        buildOpenMPGPUVariants("${BUILD_NVHPC_OPENMP_GPU}", "OPENMP_GPU")
+                    }
+                }
+            }
+        }
+
+        stage("Build: Build NVHPC OpenMP GPU Profiling") {
+            steps {
+                script {
+
+                    echo "building NVHPC OpenMP GPU with profiling instrumentation"
+
+                    if ("${params.OPENMP_GPU_PROFILE}" == "true") {
+                        buildOpenMPGPUVariants("${BUILD_NVHPC_PROF_OPENMP_GPU}", "OPENMP_GPU_PROFILE")
+                    }
+                }
+            }
+        }
+
+        stage("Build: Build NVHPC OpenMP GPU Debug") {
+            steps {
+                script {
+
+                    echo "building NVHPC OpenMP GPU with debug build"
+
+                    if ("${params.OPENMP_GPU_DEBUG}" == "true") {
+                        buildOpenMPGPUVariants("${BUILD_NVHPC_DEBUG_OPENMP_GPU}", "OPENMP_GPU_DEBUG")
+                    }
+                }
+            }
+        }
+
+        stage("Build: Build NVHPC OpenMP GPU Debug + Profiling") {
+            steps {
+                script {
+
+                    echo "building NVHPC OpenMP GPU with debug build and profiling instrumentation"
+
+                    if ("${params.OPENMP_GPU_DEBUG_PROFILE}" == "true") {
+                        buildOpenMPGPUVariants("${BUILD_NVHPC_DEBUG_PROF_OPENMP_GPU}", "OPENMP_GPU_DEBUG_PROFILE")
+                    }
+                }
+            }
+        }
+
         stage('Verify') {
             steps {
                 script {
@@ -257,6 +317,31 @@ def void runBuildScript(String script, String buildDir,  String CUDA, String qsu
 // When none of V100/A100/H200 is set, falls back to the original single-build
 // behavior on the normal queue using GPU_ARCH (empty = multi-arch default).
 def void buildOpenACCVariants(String baseDir, String variant) {
+    boolean anyArch = ("${params.V100}" == "true") || ("${params.A100}" == "true") || ("${params.H200}" == "true")
+    if (anyArch) {
+        if ("${params.V100}" == "true") {
+            echo "building ${variant} for V100 (cc70) -> ${baseDir}-v100"
+            runBuildScript("jenkins-cmake-build-nvhpc.sh", "${baseDir}-v100", variant, "${QSUB}", "cc70")
+        }
+        if ("${params.A100}" == "true") {
+            echo "building ${variant} for A100 (cc80) on dgxa100 queue -> ${baseDir}-a100"
+            runBuildScript("jenkins-cmake-build-nvhpc-a100.sh", "${baseDir}-a100", variant, "${QSUB}", "cc80")
+        }
+        if ("${params.H200}" == "true") {
+            echo "building ${variant} for H200 (cc90) on gpuhopper queue -> ${baseDir}-h200"
+            runBuildScript("jenkins-cmake-build-nvhpc-h200.sh", "${baseDir}-h200", variant, "${QSUB}", "cc90")
+        }
+    } else {
+        runBuildScript("jenkins-cmake-build-nvhpc.sh", baseDir, variant, "${QSUB}", "${GPU_ARCH}")
+    }
+}
+
+// Dispatches one or more single-arch OpenMP GPU builds for the given variant.
+// Mirrors buildOpenACCVariants but passes OPENMP_GPU* variant strings.
+//   V100  -> jenkins-cmake-build-nvhpc.sh       (-q normal,    cc70)
+//   A100  -> jenkins-cmake-build-nvhpc-a100.sh  (-q dgxa100,   cc80)
+//   H200  -> jenkins-cmake-build-nvhpc-h200.sh  (-q gpuhopper, cc90)
+def void buildOpenMPGPUVariants(String baseDir, String variant) {
     boolean anyArch = ("${params.V100}" == "true") || ("${params.A100}" == "true") || ("${params.H200}" == "true")
     if (anyArch) {
         if ("${params.V100}" == "true") {
