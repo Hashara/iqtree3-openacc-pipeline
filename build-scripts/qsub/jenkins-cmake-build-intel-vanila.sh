@@ -38,6 +38,7 @@ cmake "$code_dir" \
     -DIQTREE_FLAGS="avx512" \
     -DCMAKE_CXX_FLAGS="-O3 -xSAPPHIRERAPIDS -fno-omit-frame-pointer" \
     -DCMAKE_C_FLAGS="-O3 -xSAPPHIRERAPIDS -fno-omit-frame-pointer" \
+    -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" \
     -DEIGEN3_INCLUDE_DIR=/apps/eigen/3.3.7/include/eigen3 \
     -DUSE_CMAPLE=OFF > $work_dir/compiler.log 2>&1
 make -j > $work_dir/build.log 2>&1
