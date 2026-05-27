@@ -14,6 +14,7 @@ pipeline {
         // bool for building NN
         booleanParam(defaultValue: true, description: 'Compile with NVHPC?', name: 'NVHPC')
         booleanParam(defaultValue: true, description: 'Compile with GCC?', name: 'GCC')
+        booleanParam(defaultValue: false, description: 'Compile with Intel oneAPI on normal (Cascade Lake)?', name: 'INTEL_CLX')
         booleanParam(defaultValue: true, description: 'Vanila?', name: 'VANILA')
         booleanParam(defaultValue: true, description: 'OpenACC intergration?', name: 'OPENACC')
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
@@ -34,6 +35,7 @@ pipeline {
         // build directories
         BUILD_NVHPC_VANILA = "${BUILD_OUTPUT_DIR}/build-nvhpc-vanila"
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-gcc-vanila"
+        BUILD_INTEL_VANILA_CLX = "${BUILD_OUTPUT_DIR}/build-intel-vanila-clx"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
         BUILD_GCC_OPENACC = "${BUILD_OUTPUT_DIR}/build-gcc-openacc"
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
@@ -104,6 +106,19 @@ pipeline {
                     }
 
 
+                }
+            }
+        }
+
+        stage("Build: Build Intel Vanila (CLX)") {
+            steps {
+                script {
+
+                    echo "building Intel oneAPI vanila version on normal (Cascade Lake)"
+
+                    if ("${params.INTEL_CLX}" == "true" && "${params.VANILA}" == "true") {
+                        runBuildScript("jenkins-cmake-build-intel-clx.sh", "${BUILD_INTEL_VANILA_CLX}", "", "${QSUB}")
+                    }
                 }
             }
         }

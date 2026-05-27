@@ -15,6 +15,7 @@ pipeline {
         booleanParam(defaultValue: true, description: 'Vanila (GCC)?', name: 'VANILA')
         booleanParam(defaultValue: false, description: 'Vanila (Clang)?', name: 'CLANG_VANILA')
         booleanParam(defaultValue: false, description: 'Vanila (Intel oneAPI on normalsr / Sapphire Rapids)?', name: 'INTEL_VANILA')
+        booleanParam(defaultValue: false, description: 'Vanila (Intel oneAPI on normal / Cascade Lake)?', name: 'INTEL_VANILA_CLX')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
         booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
@@ -49,6 +50,7 @@ pipeline {
         BUILD_GCC_VANILA = "${BUILD_OUTPUT_DIR}/build-vanila"
         BUILD_CLANG_VANILA = "${BUILD_OUTPUT_DIR}/build-clang-vanila"
         BUILD_INTEL_VANILA = "${BUILD_OUTPUT_DIR}/build-intel-vanila"
+        BUILD_INTEL_VANILA_CLX = "${BUILD_OUTPUT_DIR}/build-intel-vanila-clx"
         BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
@@ -139,6 +141,20 @@ pipeline {
 
                     if ("${params.INTEL_VANILA}" == "true") {
                         runBuildScript("jenkins-cmake-build-intel-vanila.sh", "${BUILD_INTEL_VANILA}", "", "${QSUB}")
+                    }
+
+                }
+            }
+        }
+
+        stage("Build: Build Intel Vanila (CLX)") {
+            steps {
+                script {
+
+                    echo "building Intel oneAPI vanila version on normal (Cascade Lake)"
+
+                    if ("${params.INTEL_VANILA_CLX}" == "true") {
+                        runBuildScript("jenkins-cmake-build-intel-clx.sh", "${BUILD_INTEL_VANILA_CLX}", "", "${QSUB}")
                     }
 
                 }
