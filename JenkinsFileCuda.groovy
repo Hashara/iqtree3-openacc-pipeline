@@ -17,6 +17,7 @@ pipeline {
         booleanParam(defaultValue: false, description: 'Vanila (Intel oneAPI on normalsr / Sapphire Rapids)?', name: 'INTEL_VANILA')
         booleanParam(defaultValue: false, description: 'Vanila (Intel oneAPI on normal / Cascade Lake)?', name: 'INTEL_VANILA_CLX')
         booleanParam(defaultValue: true, description: 'CUDA intergration?', name: 'CUDA')
+        booleanParam(defaultValue: false, description: 'IQTREE_GPU (in-tree CUDA ModelFinder kernels)?', name: 'IQTREE_GPU')
         booleanParam(defaultValue: true, description: 'OpenACC implementation?', name: 'OPENACC')
         booleanParam(defaultValue: false, description: 'OpenACC with profiling instrumentation?', name: 'OPENACC_PROFILE')
         booleanParam(defaultValue: false, description: 'OpenACC with debug build?', name: 'OPENACC_DEBUG')
@@ -52,6 +53,7 @@ pipeline {
         BUILD_INTEL_VANILA = "${BUILD_OUTPUT_DIR}/build-intel-vanila"
         BUILD_INTEL_VANILA_CLX = "${BUILD_OUTPUT_DIR}/build-intel-vanila-clx"
         BUILD_NVHPC_CUDA = "${BUILD_OUTPUT_DIR}/build-nvhpc-cuda"
+        BUILD_NVHPC_IQTREE_GPU = "${BUILD_OUTPUT_DIR}/build-nvhpc-iqtree-gpu"
         BUILD_NVHPC_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-openacc"
         BUILD_NVHPC_PROF_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-prof-openacc"
         BUILD_NVHPC_DEBUG_OPENACC = "${BUILD_OUTPUT_DIR}/build-nvhpc-debug-openacc"
@@ -171,6 +173,21 @@ pipeline {
 
                     if ("${params.CUDA}" == "true") {
                         runBuildScript("jenkins-cmake-build-nvhpc.sh", "${BUILD_NVHPC_CUDA}", "CUDA", "${QSUB}")
+                    }
+                }
+            }
+
+        }
+        stage("Build: Build NVHPC IQTREE_GPU") {
+            steps {
+
+
+                script {
+
+                    echo "building NVHPC IQTREE_GPU version (in-tree CUDA ModelFinder kernels)"
+
+                    if ("${params.IQTREE_GPU}" == "true") {
+                        buildIQTreeGPUVariants("${BUILD_NVHPC_IQTREE_GPU}", "IQTREE_GPU")
                     }
                 }
             }
@@ -349,6 +366,31 @@ def void runBuildScript(String script, String buildDir,  String CUDA, String qsu
 // When none of V100/A100/H200 is set, falls back to the original single-build
 // behavior on the normal queue using GPU_ARCH (empty = multi-arch default).
 def void buildOpenACCVariants(String baseDir, String variant) {
+    boolean anyArch = ("${params.V100}" == "true") || ("${params.A100}" == "true") || ("${params.H200}" == "true")
+    if (anyArch) {
+        if ("${params.V100}" == "true") {
+            echo "building ${variant} for V100 (cc70) -> ${baseDir}-v100"
+            runBuildScript("jenkins-cmake-build-nvhpc.sh", "${baseDir}-v100", variant, "${QSUB}", "cc70")
+        }
+        if ("${params.A100}" == "true") {
+            echo "building ${variant} for A100 (cc80) on dgxa100 queue -> ${baseDir}-a100"
+            runBuildScript("jenkins-cmake-build-nvhpc-a100.sh", "${baseDir}-a100", variant, "${QSUB}", "cc80")
+        }
+        if ("${params.H200}" == "true") {
+            echo "building ${variant} for H200 (cc90) on gpuhopper queue -> ${baseDir}-h200"
+            runBuildScript("jenkins-cmake-build-nvhpc-h200.sh", "${baseDir}-h200", variant, "${QSUB}", "cc90")
+        }
+    } else {
+        runBuildScript("jenkins-cmake-build-nvhpc.sh", baseDir, variant, "${QSUB}", "${GPU_ARCH}")
+    }
+}
+
+// Dispatches one or more single-arch IQTREE_GPU builds (in-tree CUDA ModelFinder
+// kernels). Mirrors buildOpenACCVariants but passes the IQTREE_GPU variant string.
+//   V100  -> jenkins-cmake-build-nvhpc.sh       (-q normal,    cc70)
+//   A100  -> jenkins-cmake-build-nvhpc-a100.sh  (-q dgxa100,   cc80)
+//   H200  -> jenkins-cmake-build-nvhpc-h200.sh  (-q gpuhopper, cc90)
+def void buildIQTreeGPUVariants(String baseDir, String variant) {
     boolean anyArch = ("${params.V100}" == "true") || ("${params.A100}" == "true") || ("${params.H200}" == "true")
     if (anyArch) {
         if ("${params.V100}" == "true") {
