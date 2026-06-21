@@ -25,18 +25,25 @@ params=$ARG3
 
 if [ "$params" == "openacc-profile" ]; then
     echo "building nvhpc-openacc with profiling"
-    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON"
+    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DIQTREE_GPU=OFF"
 elif [ "$params" == "openacc" ]; then
     echo "building nvhpc-openacc"
-    cmake_params="-DUSE_OPENACC=ON"
+    cmake_params="-DUSE_OPENACC=ON -DIQTREE_GPU=OFF"
+elif [ "$params" == "iqtree_gpu" ] || [ "$params" == "IQTREE_GPU" ]; then
+    echo "building nvhpc-IQTREE_GPU (in-tree CUDA ModelFinder kernels)"
+    cmake_params="-DIQTREE_GPU=ON -DUSE_OPENACC=OFF -DUSE_CUDA=OFF"
 else
     echo "building nvhpc-vanila"
-    cmake_params="-DUSE_OPENACC=OFF"
+    cmake_params="-DUSE_OPENACC=OFF -DIQTREE_GPU=OFF"
 fi
 
 
 ### pre steps #####
-module load openmpi/4.1.5 boost/1.84.0 nvhpc-compilers/24.7
+if [ "$params" == "iqtree_gpu" ] || [ "$params" == "IQTREE_GPU" ]; then
+    module load openmpi/4.1.5 boost/1.84.0 nvhpc-compilers/24.7 cuda/12.5.1
+else
+    module load openmpi/4.1.5 boost/1.84.0 nvhpc-compilers/24.7
+fi
 
 
 export OMPI_CC=nvc
@@ -56,7 +63,19 @@ echo "building nvhpc-vanila"
 
 mkdir -p "$work_dir"
 cd $work_dir
-cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
+if [ "$params" == "iqtree_gpu" ] || [ "$params" == "IQTREE_GPU" ]; then
+    cmake -S "$code_dir" -B "$work_dir" \
+      -DCMAKE_C_COMPILER=nvc \
+      -DCMAKE_CXX_COMPILER=nvc++ \
+      -DCMAKE_CUDA_COMPILER="$(command -v nvcc)" \
+      -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
+      -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
+      -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen \
+      -DUSE_CMAPLE=OFF \
+      ${cmake_params}
+else
+    cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen -DUSE_CMAPLE=OFF ${cmake_params} $code_dir
+fi
 make -j > $work_dir/build.log 2>&1
 
 

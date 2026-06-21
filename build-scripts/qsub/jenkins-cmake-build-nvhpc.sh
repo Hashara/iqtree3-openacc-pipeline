@@ -27,9 +27,12 @@ gpu_arch=$ARG4 # GPU architecture (e.g. cc70, cc80, cc90). Empty = multi-arch de
 if [ "$params" == "CUDA" ]; then
     echo "building nvhpc-cuda"
     cmake_params="-DUSE_CUDA=ON"
+elif [ "$params" == "IQTREE_GPU" ]; then
+    echo "building nvhpc-IQTREE_GPU (in-tree CUDA ModelFinder kernels)"
+    cmake_params="-DIQTREE_GPU=ON -DUSE_OPENACC=OFF -DUSE_CUDA=OFF"
 elif [ "$params" == "OPENACC_PROFILE" ]; then
     echo "building nvhpc-OpenACC with profiling"
-    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON"
+    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DIQTREE_GPU=OFF"
     if [ -n "$gpu_arch" ]; then
         cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
         echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
@@ -38,7 +41,7 @@ elif [ "$params" == "OPENACC_PROFILE" ]; then
     fi
 elif [ "$params" == "OPENACC_DEBUG" ]; then
     echo "building nvhpc-OpenACC with debug build"
-    cmake_params="-DUSE_OPENACC=ON -DCMAKE_BUILD_TYPE=Debug"
+    cmake_params="-DUSE_OPENACC=ON -DCMAKE_BUILD_TYPE=Debug -DIQTREE_GPU=OFF"
     if [ -n "$gpu_arch" ]; then
         cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
         echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
@@ -47,7 +50,7 @@ elif [ "$params" == "OPENACC_DEBUG" ]; then
     fi
 elif [ "$params" == "OPENACC_DEBUG_PROFILE" ]; then
     echo "building nvhpc-OpenACC with debug build and profiling"
-    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DCMAKE_BUILD_TYPE=Debug"
+    cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DCMAKE_BUILD_TYPE=Debug -DIQTREE_GPU=OFF"
     if [ -n "$gpu_arch" ]; then
         cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
         echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
@@ -56,7 +59,7 @@ elif [ "$params" == "OPENACC_DEBUG_PROFILE" ]; then
     fi
 elif [ "$params" == "OPENACC" ]; then
     echo "building nvhpc-OpenACC"
-    cmake_params="-DUSE_OPENACC=ON"
+    cmake_params="-DUSE_OPENACC=ON -DIQTREE_GPU=OFF"
     if [ -n "$gpu_arch" ]; then
         cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch}"
         echo "GPU_ARCH: ${gpu_arch} (single-arch build)"
@@ -128,7 +131,7 @@ echo "building nvhpc-cuda"
 mkdir -p "$work_dir"
 cd $work_dir
 #cmake -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 -DUSE_CMAPLE=OFF -DUSE_CUDA=ON $code_dir
-if [ "$params" == "CUDA" ]; then
+if [ "$params" == "CUDA" ] || [ "$params" == "IQTREE_GPU" ]; then
 cmake -S "$code_dir" -B "$work_dir" \
   -DCMAKE_C_COMPILER=nvc \
   -DCMAKE_CXX_COMPILER=nvc++ \
