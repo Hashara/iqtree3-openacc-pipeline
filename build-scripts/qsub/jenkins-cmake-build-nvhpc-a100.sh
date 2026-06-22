@@ -24,14 +24,15 @@ if [ "$params" == "CUDA" ]; then
     echo "building nvhpc-cuda"
     cmake_params="-DUSE_CUDA=ON"
 elif [ "$params" == "IQTREE_GPU" ]; then
-    echo "building nvhpc-IQTREE_GPU (in-tree CUDA ModelFinder kernels)"
-    cmake_params="-DIQTREE_GPU=ON -DUSE_OPENACC=OFF -DUSE_CUDA=OFF"
+    echo "building nvhpc-IQTREE_GPU (CUDA JOLT + OpenACC GPU likelihood)"
+    cmake_params="-DIQTREE_GPU=ON -DUSE_OPENACC=ON -DUSE_CUDA=OFF"
     if [ -n "$gpu_arch" ]; then
-        # ccNN -> NN for CMAKE_CUDA_ARCHITECTURES (cc70->70 V100, cc80->80 A100, cc90->90 H200)
-        cmake_params="${cmake_params} -DCMAKE_CUDA_ARCHITECTURES=${gpu_arch#cc}"
-        echo "CUDA arch: ${gpu_arch#cc} (single-arch build)"
+        # OpenACC GPU likelihood needs GPU_ARCH (ccNN); the in-tree CUDA JOLT kernels need
+        # CMAKE_CUDA_ARCHITECTURES (NN). cc70->70 V100, cc80->80 A100, cc90->90 H200.
+        cmake_params="${cmake_params} -DGPU_ARCH=${gpu_arch} -DCMAKE_CUDA_ARCHITECTURES=${gpu_arch#cc}"
+        echo "GPU arch: ${gpu_arch} (OpenACC likelihood) + ${gpu_arch#cc} (CUDA JOLT)"
     else
-        echo "CUDA arch: default (70;80;90)"
+        echo "GPU arch: default"
     fi
 elif [ "$params" == "OPENACC_PROFILE" ]; then
     echo "building nvhpc-OpenACC with profiling"
@@ -134,10 +135,14 @@ echo "building on dgxa100 queue (A100)"
 mkdir -p "$work_dir"
 cd $work_dir
 if [ "$params" == "CUDA" ] || [ "$params" == "IQTREE_GPU" ]; then
+module load gcc/12.2.0                  # CUDA 12.5 .cu host compiler (system g++ 8.5 is too old)
+[ -n "$CUDA_HOME" ] && export NVHPC_CUDA_HOME="$CUDA_HOME"   # align nvc++ -acc CUDA with the nvcc toolkit (combined build)
 cmake -S "$code_dir" -B "$work_dir" \
   -DCMAKE_C_COMPILER=nvc \
   -DCMAKE_CXX_COMPILER=nvc++ \
+  -DCMAKE_CXX_FLAGS="$LDFLAGS $CPPFLAGS" \
   -DCMAKE_CUDA_COMPILER="$(command -v nvcc)" \
+  -DCMAKE_CUDA_HOST_COMPILER="$(command -v g++)" \
   -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
   -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
   -DTHREADS_PREFER_PTHREAD_FLAG=ON \
