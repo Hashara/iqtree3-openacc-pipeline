@@ -26,6 +26,13 @@ if [ "$params" == "CUDA" ]; then
 elif [ "$params" == "IQTREE_GPU" ]; then
     echo "building nvhpc-IQTREE_GPU (in-tree CUDA ModelFinder kernels)"
     cmake_params="-DIQTREE_GPU=ON -DUSE_OPENACC=OFF -DUSE_CUDA=OFF"
+    if [ -n "$gpu_arch" ]; then
+        # ccNN -> NN for CMAKE_CUDA_ARCHITECTURES (cc70->70 V100, cc80->80 A100, cc90->90 H200)
+        cmake_params="${cmake_params} -DCMAKE_CUDA_ARCHITECTURES=${gpu_arch#cc}"
+        echo "CUDA arch: ${gpu_arch#cc} (single-arch build)"
+    else
+        echo "CUDA arch: default (70;80;90)"
+    fi
 elif [ "$params" == "OPENACC_PROFILE" ]; then
     echo "building nvhpc-OpenACC with profiling"
     cmake_params="-DUSE_OPENACC=ON -DUSE_OPENACC_PROFILE=ON -DIQTREE_GPU=OFF"
@@ -133,6 +140,11 @@ cmake -S "$code_dir" -B "$work_dir" \
   -DCMAKE_CUDA_COMPILER="$(command -v nvcc)" \
   -DCMAKE_POLICY_DEFAULT_CMP0074=NEW \
   -DCUDAToolkit_ROOT="$(dirname "$(dirname "$(command -v nvcc)")")" \
+  -DTHREADS_PREFER_PTHREAD_FLAG=ON \
+  -DCMAKE_THREAD_LIBS_INIT=-lpthread \
+  -DCMAKE_HAVE_THREADS_LIBRARY=1 \
+  -DCMAKE_USE_PTHREADS_INIT=1 \
+  -DCMAKE_USE_WIN32_THREADS_INIT=0 \
   -DEIGEN3_INCLUDE_DIR=/scratch/dx61/sa0557/iqtree2/eigen-3.4.0 \
   -DUSE_CMAPLE=OFF \
   $cmake_params > $work_dir/compiler.log 2>&1
