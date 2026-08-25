@@ -1,10 +1,9 @@
 #!/bin/bash
 
 #PBS -l ncpus=12
-#PBS -l ngpus=1
 #PBS -l mem=48GB
 #PBS -l jobfs=100GB
-#PBS -q gpuhopper
+#PBS -q normalsr
 #PBS -P dx61
 #PBS -l walltime=01:00:00
 #PBS -l storage=scratch/dx61
@@ -130,7 +129,11 @@ export CPPFLAGS="-I/apps/nvidia-hpc-sdk/24.7/Linux_x86_64/24.7/compilers/include
 ############
 
 
-echo "building on gpuhopper queue (H200)"
+# No GPU is requested: this script only configures and compiles, it never runs the
+# binary. nvc++ emits ccNN device code from a NAMED target, so no device need be
+# present. GPU_ARCH is always an explicit ccNN (or the explicit cc70,cc80,cc90
+# default) -- never "native", which is the one setting that would require one.
+echo "building on normalsr (CPU-only); target GPU arch is a compile-time flag"
 
 mkdir -p "$work_dir"
 cd $work_dir
